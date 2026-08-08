@@ -35,11 +35,23 @@ class Settings(BaseSettings):
     redis_db: int = Field(default=0, alias="REDIS_DB")
     redis_password: str = Field(default="", alias="REDIS_PASSWORD")
 
+    # JWT
+    secret_key: str = Field(
+        default="change-me-in-production-use-a-long-random-string",
+        alias="SECRET_KEY",
+    )
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    access_token_expire_minutes: int = Field(
+        default=60,
+        alias="ACCESS_TOKEN_EXPIRE_MINUTES",
+    )
+
     @computed_field  # type: ignore[prop-decorator]
     @property
     def async_database_url(self) -> str:
         """Build the async SQLAlchemy / asyncpg PostgreSQL DSN."""
         return (
+            #use asyncpg here, otherwise it's sync, connection pool and event loop will be crashed
             f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
         )
