@@ -10,6 +10,9 @@ from app.core.database import Base
 
 
 class User(Base):
+    """ 因为 Base 继承 DeclarativeBase，类创建时 SQLAlchemy 声明式机制（内部 registry）
+    自动把表结构登记进 Base.metadata.tables["users"]
+    所以：关键行是 class User(Base):；登记在整段类体跑完后由框架完成，不是某一行手写塞进 metadata。 """
     """Registered application user."""
 
     __tablename__ = "users"

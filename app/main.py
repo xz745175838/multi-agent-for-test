@@ -7,19 +7,27 @@ import uvicorn
 from fastapi import FastAPI
 
 from app.api.v1.auth import router as auth_router
+from app.api.v1.chat import router as chat_router
 from app.api.v1.health import router as health_router
 from app.core.config import settings
 from app.core.database import Base, engine
-from app.models import User  # noqa: F401 — register metadata for create_all
+from app.core.redis import close_redis, init_redis
+from app.models import User  # noqa: F401 — register metadata for create_all, 一定要加载
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    """Create database tables on startup (dev bootstrap; replace with Alembic later)."""
+    """Initialize DB tables and Redis on startup; dispose resources on shutdown."""
     async with engine.begin() as conn:
+        # 拿连接并开事务
+        # 按 metadata 对缺失表发 CREATE TABLE（已存在则跳过）
         await conn.run_sync(Base.metadata.create_all)
-    yield
-    await engine.dispose()
+    await init_redis()
+    try:
+        yield
+    finally:
+        await close_redis()
+        await engine.dispose()
 
 
 app = FastAPI(
@@ -31,6 +39,7 @@ app = FastAPI(
 
 app.include_router(health_router, prefix=settings.api_v1_prefix)
 app.include_router(auth_router, prefix=settings.api_v1_prefix)
+app.include_router(chat_router, prefix=settings.api_v1_prefix)
 
 
 def main() -> None:
