@@ -46,6 +46,14 @@ class Settings(BaseSettings):
         alias="ACCESS_TOKEN_EXPIRE_MINUTES",
     )
 
+    # LLM (OpenAI-compatible: OpenAI / DeepSeek / proxy)
+    openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
+    openai_api_base: str = Field(
+        default="https://api.openai.com/v1",
+        alias="OPENAI_API_BASE",
+    )
+    llm_model: str = Field(default="gpt-4o", alias="LLM_MODEL")
+
     @computed_field  # type: ignore[prop-decorator]
     @property
     def async_database_url(self) -> str:
